@@ -1,12 +1,12 @@
 {
     "name": "digitlimit/storyblok-algolia",
-    "description": ":package_description",
+    "description": "Indexing Storyblok on Algolia using Laravel",
     "license": "MIT",
     "authors": [
         {
-            "name": "Author Name",
-            "email": "author@email.com",
-            "homepage": "http://author.com"
+            "name": "Emeka Mbah",
+            "email": "frankemeks77@yahoo.com",
+            "homepage": "https://emekambah.com"
         }
     ],
     "homepage": "https://github.com/digitlimit/storyblok-algolia",
