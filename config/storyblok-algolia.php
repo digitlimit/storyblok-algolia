@@ -54,6 +54,24 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Storyblok webhook endpoint
+    |--------------------------------------------------------------------------
+    |
+    | This is the endpoint that Storyblok will call when a webhook is triggered.
+    | If this is set to null, we will not register any routes for webhooks, means 
+    | you will have to register your own routes for webhooks.
+    |
+    */
+    'webhook_url' => '/webhook',
+
+    'webhook_enabled' => env('STORYBLOK_WEBHOOK_ENABLED', true),
+
+    'search_url' => '/search',
+
+    'search_enabled' => env('STORYBLOK_SEARCH_ENABLED', true),
+
+    /*
+    |--------------------------------------------------------------------------
     | Per page
     |--------------------------------------------------------------------------
     |
