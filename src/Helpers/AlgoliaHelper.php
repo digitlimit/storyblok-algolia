@@ -16,8 +16,8 @@ class AlgoliaHelper
     public function __construct()
     {
         $this->client = SearchClient::create(
-            config('algolia.id'),
-            config('algolia.secret'),
+            config('storyblok-algolia.id'),
+            config('storyblok-algolia.secret'),
         );
     }
   
@@ -80,7 +80,7 @@ class AlgoliaHelper
     public function search(string $index, string $query, $cache = true)
     {
         $cache_key = "algolia_index_products_{$query}";
-        $cache_expire = $cache ? config('algolia.cache_expire') : 0;
+        $cache_expire = $cache ? config('storyblok-algolia.cache_expire') : 0;
 
         //lets use cache to minimize API calls
         return cache()->remember(

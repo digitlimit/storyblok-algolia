@@ -16,7 +16,7 @@ class StoryblokHelper
 
     public function __construct()
     {
-        $this->client = new Client(config('storyblok.oauth_token'));
+        $this->client = new Client(config('storyblok-algolia.oauth_token'));
     }
 
     /**
@@ -27,17 +27,17 @@ class StoryblokHelper
     public function getStories(string $slug, array $options = []) : array
     {
         // Optionally set a cache
-        if (config('storyblok.cache')) {
+        if (config('storyblok-algolia.cache')) {
             $this->client->setCache(
                 'filesytem',
-                array('path' => config('storyblok.cache_path'))
+                array('path' => config('storyblok-algolia.cache_path'))
             );
         }
 
         $new_options = array_merge(
             [
                 'is_startpage' => 0,
-                'per_page' => config('storyblok.per_page'),
+                'per_page' => config('storyblok-algolia.per_page'),
             ],
             $options
         );
@@ -82,7 +82,7 @@ class StoryblokHelper
         $signature = hash_hmac(
             'sha1',
             $request->getContent(),
-            config('storyblok.webhook_secret')
+            config('storyblok-algolia.webhook_secret')
         );
 
         $action = $request->action;
