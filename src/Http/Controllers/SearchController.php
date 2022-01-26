@@ -35,6 +35,12 @@ class SearchController extends Controller
     {
         $query = $request->q;
 
+        if (!$query) {
+            return response()->json(
+                ['hits' => [], 'nbHits' => 0],
+            );
+        }
+
         $objects = $this->algoliaHelper->search(
             'products',
             $query,
