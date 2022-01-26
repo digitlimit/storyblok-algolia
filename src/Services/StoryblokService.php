@@ -1,19 +1,18 @@
-<?php 
+<?php
 
 namespace Digitlimit\StoryblokAlgolia\Services;
 
 use Illuminate\Http\Request;
 use Digitlimit\StoryblokAlgolia\Helpers\StoryblokHelper;
 use Digitlimit\StoryblokAlgolia\Helpers\AlgoliaHelper;
-use Digitlimit\StoryblokAlgolia\Formatters\Storyblok\Formatter;
-use Digitlimit\StoryblokAlgolia\Formatters\Storyblok\ProductFormatter;
-use Digitlimit\StoryblokAlgolia\Formatters\Storyblok\ProductsFormatter;
+use Digitlimit\StoryblokAlgolia\Formatters\Storyblok\FormatterFactory;
+use Exception;
 
-class StoryblokService 
+class StoryblokService
 {
     protected $storyblokHelper;
     protected $algoliaHelper;
-    protected $formatter;
+    protected $formatterFactory;
 
     /**
      * Create a new controller instance.
@@ -26,11 +25,11 @@ class StoryblokService
     public function __construct(
         StoryblokHelper $storyblokHelper,
         AlgoliaHelper $algoliaHelper,
-        Formatter $formatter
+        FormatterFactory $formatterFactory
     ) {
         $this->storyblokHelper = $storyblokHelper;
         $this->algoliaHelper = $algoliaHelper;
-        $this->formatter = $formatter;
+        $this->formatterFactory = $formatterFactory;
     }
 
     /**
@@ -42,18 +41,23 @@ class StoryblokService
     {
         info('Storyblok webhook received');
 
-        $this->storyblokHelper->handleWebhook(
-            $request,
-            fn($payload, $storyblok) => $this->handlePublished(
-                $payload, $storyblok
-            ),
-            fn($payload, $storyblok) => $this->handleUnpublished(
-                $payload, $storyblok
-            ),
-            fn($payload, $storyblok) => $this->handleUnpublished(
-                $payload, $storyblok
-            ),
-        );
+        try {
+            $this->storyblokHelper->handleWebhook(
+                $request,
+                function ($payload, $storyblok) {
+                    $this->handlePublished($payload, $storyblok);
+                },
+                function ($payload, $storyblok) {
+                    $this->handleUnpublished($payload, $storyblok);
+                },
+                function ($payload, $storyblok) {
+                    $this->handleUnpublished($payload, $storyblok);
+                },
+            );
+        } catch (Exception $e) {
+            info('Storyblok webhook failed: ' . $e->getMessage());
+            return;
+        }
 
         return response()
             ->json(['success' => true]);
@@ -64,30 +68,38 @@ class StoryblokService
      *
      * @return Client
      */
-    public function handleStories()
-    {
+    public function handleStories(
+        string $page_type,
+        string $algolia_index,
+        array $storyblok_options = []
+    ) {
+        $options = array_merge(
+            ['is_startpage' => 0,'per_page' => 100,], 
+            $storyblok_options
+        );
+
         $stories = $this->storyblokHelper
             ->getStories(
-                'product',
-                [
-                    'is_startpage' => 0,
-                    'per_page' => 100,
-                ]
+                $page_type,
+                $options
             );
 
-            $formatted_stories = $this->formatter->setFormat(
-                new ProductsFormatter($stories)
-            )->getFormat();
+        $formatterClass = $this->formatterFactory
+            ->make($page_type, $stories);
 
-            $this->algoliaHelper
-                ->addMany('products', $formatted_stories);
+        $formatted_stories = $this->formatter->setFormat(
+            $formatterClass
+        )->getFormat();
+
+        $this->algoliaHelper
+            ->addMany($algolia_index, $formatted_stories);
     }
 
     /**
      * Handle published Storyblok stories.
      *
      * @return Client
-     */ 
+     */
     protected function handlePublished(object $payload, StoryblokHelper $storyblok)
     {
         $story = $storyblok
@@ -95,35 +107,15 @@ class StoryblokService
 
         $page_type = $story['content']['component'];
 
-        $formatterClass = 'App\Formatters\Storyblok\\' 
-            . ucfirst($page_type) 
-            . 'Formatter';
+        $formatterClass = $this->formatterFactory
+            ->make($page_type, $story);
 
-        if (class_exists($formatterClass)) {
-            $formatted_story = $this->formatter->setFormat(
-                new $formatterClass($story)
-            )->getFormat();
+        $formatted_story = $this->formatter->setFormat(
+            new $formatterClass($story)
+        )->getFormat();
 
-            $this->algoliaHelper
-                ->add(strtolower($page_type), $formatted_story);
-
-            info(['published' => $formatted_story]);
-        } else {
-            info("Page type '{$page_type}' formatter not found");
-        }
-
-        // if ($page_type == 'product') {
-        //     $formatted_story = $this->formatter->setFormat(
-        //         new ProductFormatter($story)
-        //     )->getFormat();
-
-        //     $this->algoliaHelper
-        //         ->add('products', $formatted_story);
-
-        //     info(['published' => $formatted_story]);
-        // } else {
-        //     info("Page type '{$page_type}' not supported");
-        // }
+        $this->algoliaHelper
+            ->add(strtolower($page_type), $formatted_story);
     }
 
     /**
@@ -147,13 +139,5 @@ class StoryblokService
 
         $this->algoliaHelper
             ->delete($algolia_index, $object_id);
-
-        // if ($page_type == 'product') {
-           
-
-        //     info(['unpublished' => $object_id]);
-        // } else {
-        //     info("Page type '{$page_type}' not supported");
-        // }
     }
 }
