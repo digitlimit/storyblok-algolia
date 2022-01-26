@@ -15,7 +15,7 @@ use Digitlimit\StoryblokAlgolia\Http\Controllers\StoryblokController;
 |
 */
 
-Route::prefix('storyblok')->name('storyblok.')->group(
+Route::prefix('storyblok')->name('storyblok-algolia.')->group(
     function () {
 
         if (config('storyblok-algolia.webhook_enabled', true)) {

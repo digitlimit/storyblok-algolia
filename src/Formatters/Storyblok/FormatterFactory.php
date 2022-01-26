@@ -10,7 +10,7 @@ class FormatterFactory
     /**
      * Create a new formatter instance.
      */
-    public function make(string $type, array $story): Formatter
+    public function make(string $type, array $story): FormatterInterface
     {
         $class_name = Str::studly($type);
         $class = "App\\Formatters\\Storyblok\\{$class_name}Formatter";

@@ -5,6 +5,7 @@ namespace Digitlimit\StoryblokAlgolia\Services;
 use Illuminate\Http\Request;
 use Digitlimit\StoryblokAlgolia\Helpers\StoryblokHelper;
 use Digitlimit\StoryblokAlgolia\Helpers\AlgoliaHelper;
+use Digitlimit\StoryblokAlgolia\Formatters\Storyblok\Formatter;
 use Digitlimit\StoryblokAlgolia\Formatters\Storyblok\FormatterFactory;
 use Exception;
 
@@ -12,12 +13,14 @@ class StoryblokService
 {
     protected $storyblokHelper;
     protected $algoliaHelper;
+    protected $formatter;
     protected $formatterFactory;
 
     /**
      * Create a new controller instance.
      * @param StoryblokHelper $storyblokHelper
      * @param AlgoliaHelper $algoliaHelper
+     * @param FormatterFactory $formatterFactory
      * @param Formatter $formatter
      *
      * @return void
@@ -25,10 +28,12 @@ class StoryblokService
     public function __construct(
         StoryblokHelper $storyblokHelper,
         AlgoliaHelper $algoliaHelper,
+        Formatter $formatter,
         FormatterFactory $formatterFactory
     ) {
         $this->storyblokHelper = $storyblokHelper;
         $this->algoliaHelper = $algoliaHelper;
+        $this->formatter = $formatter;
         $this->formatterFactory = $formatterFactory;
     }
 
@@ -105,17 +110,27 @@ class StoryblokService
         $story = $storyblok
             ->getStory($payload->story_id);
 
+        // info(['$story' => $story]);
+
         $page_type = $story['content']['component'];
+
+        // info(['$page_type' => $page_type]);
 
         $formatterClass = $this->formatterFactory
             ->make($page_type, $story);
+
+        // info(['$formatterClass' => $formatterClass]);
 
         $formatted_story = $this->formatter->setFormat(
             new $formatterClass($story)
         )->getFormat();
 
+        // info(['$formatted_story' => $formatted_story]);
+
         $this->algoliaHelper
             ->add(strtolower($page_type), $formatted_story);
+
+        // info("Story published: {$story['content']['title']}");
     }
 
     /**
