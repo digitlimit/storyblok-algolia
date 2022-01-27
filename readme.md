@@ -17,6 +17,9 @@ $ composer require digitlimit/storyblok-algolia
 
 ## Usage
 
+How to use this package
+
+
 ## Change log
 
 Please see the [changelog](changelog.md) for more information on what has changed recently.
