@@ -3,6 +3,16 @@
 return [
     /*
     |--------------------------------------------------------------------------
+    | Debug mode
+    |--------------------------------------------------------------------------
+    |
+    | This will enable the debug mode, which will dump data in the laravel log.
+    | Useful for debugging purposes and viewing data sent from the Storyblok
+    */
+    'debug' => env('STORYBLOK_ALGOLIA_DEBUG', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Storyblok Personal access token
     |--------------------------------------------------------------------------
     |
